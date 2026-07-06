@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作品集</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e0e0e0;
+    --text-secondary: #888;
+    --accent: #4da3ff;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 32px 24px 20px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+  }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .filter-btn {
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    padding: 20px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .card-thumb {
+    width: 100%;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    display: block;
+    background: #111;
+  }
+
+  .card-video-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-video-badge::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 12px solid #fff;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    margin-left: 3px;
+  }
+
+  .card-info {
+    padding: 12px 14px;
+  }
+
+  .card-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 14px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+
+  .card-download:hover { opacity: 0.85; }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .lightbox.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .lightbox-content {
+    max-width: 92vw;
+    max-height: 90vh;
+    position: relative;
+  }
+
+  .lightbox-content img,
+  .lightbox-content video {
+    max-width: 92vw;
+    max-height: 85vh;
+    border-radius: 8px;
+    box-shadow: 0 0 60px rgba(0,0,0,0.6);
+  }
+
+  .lightbox-content video {
+    min-width: 320px;
+    min-height: 240px;
+  }
+
+  .lightbox-close {
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+
+  .lightbox-close:hover { background: rgba(255,255,255,0.25); }
+
+  .lightbox-download {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 24px;
+    border-radius: 24px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.15s;
+  }
+
+  .lightbox-download:hover { opacity: 0.85; }
+
+  .lightbox-prev, .lightbox-next {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-prev:hover, .lightbox-next:hover { background: rgba(255,255,255,0.25); }
+  .lightbox-prev { left: 16px; }
+  .lightbox-next { right: 16px; }
+
+  .lightbox-counter {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-secondary);
+    grid-column: 1 / -1;
+  }
+
+  footer {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 640px) {
+    .grid {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+      padding: 12px;
+    }
+    header { padding: 20px 16px 14px; }
+    header h1 { font-size: 1.25rem; }
+    .card-info { padding: 8px 10px; }
+    .lightbox-prev, .lightbox-next { width: 36px; height: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="pageTitle">作品集</h1>
+  <p id="pageDesc"></p>
+  <div class="filters" id="filters"></div>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<footer>
+  <p id="itemCount"></p>
+</footer>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lbClose">✕</button>
+  <span class="lightbox-counter" id="lbCounter"></span>
+  <button class="lightbox-prev" id="lbPrev">◂</button>
+  <button class="lightbox-next" id="lbNext">▸</button>
+  <div class="lightbox-content" id="lbContent"></div>
+  <a class="lightbox-download" id="lbDownload" href="#" download>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    下载原文件
+  </a>
+</div>
+
+<script>
+(async function() {
+  let catalog = { title: '作品集', description: '', items: [] };
+
+  try {
+    const res = await fetch('catalog.json');
+    if (res.ok) catalog = await res.json();
+  } catch (e) {
+    console.warn('catalog.json 加载失败');
+  }
+
+  document.getElementById('pageTitle').textContent = catalog.title;
+  document.getElementById('pageDesc').textContent = catalog.description || '';
+
+  const tags = new Set();
+  catalog.items.forEach(item => {
+    if (item.tags) item.tags.forEach(t => tags.add(t));
+  });
+
+  const filtersEl = document.getElementById('filters');
+  let activeTag = null;
+
+  if (tags.size > 0) {
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn active';
+    allBtn.textContent = '全部';
+    allBtn.onclick = () => { activeTag = null; render(); updateFilterBtns(); };
+    filtersEl.appendChild(allBtn);
+
+    [...tags].sort().forEach(tag => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.textContent = tag;
+      btn.onclick = () => { activeTag = tag; render(); updateFilterBtns(); };
+      filtersEl.appendChild(btn);
+    });
+  }
+
+  function updateFilterBtns() {
+    filtersEl.querySelectorAll('.filter-btn').forEach((btn, i) => {
+      if (i === 0) btn.classList.toggle('active', activeTag === null);
+      else btn.classList.toggle('active', btn.textContent === activeTag);
+    });
+  }
+
+  const grid = document.getElementById('grid');
+  const imageExts = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']);
+  const videoExts = new Set(['mp4', 'webm', 'mov', 'avi', 'mkv']);
+
+  function getExt(filename) {
+    return (filename || '').split('.').pop().toLowerCase();
+  }
+
+  function isVideo(filename) { return videoExts.has(getExt(filename)); }
+  function isImage(filename) { return imageExts.has(getExt(filename)); }
+
+  function formatSize(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+  }
+
+  function render() {
+    grid.innerHTML = '';
+
+    const filtered = activeTag
+      ? catalog.items.filter(item => item.tags && item.tags.includes(activeTag))
+      : catalog.items;
+
+    document.getElementById('itemCount').textContent =
+      '共 ' + filtered.length + ' 个作品' + (catalog.items.length !== filtered.length ? ' / 总计 ' + catalog.items.length + ' 个' : '');
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;opacity:0.3;margin-bottom:12px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p>暂无作品</p></div>';
+      return;
+    }
+
+    filtered.forEach((item, idx) => {
+      const video = isVideo(item.file || '') || item.type === 'video';
+      const url = item.url;
+
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      if (video) {
+        card.innerHTML = `
+          <img class="card-thumb" src="${item.thumb || ''}" alt="${item.title}" loading="lazy"
+               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 320 200%22><rect fill=%22%231a1a1a%22 width=%22320%22 height=%22200%22/><polygon fill=%22%23444%22 points=%22140,80 140,120 175,100%22/></svg>'">
+          <div class="card-video-badge"></div>`;
+      } else {
+        card.innerHTML = '<img class="card-thumb" src="' + url + '" alt="' + item.title + '" loading="lazy">';
+      }
+
+      card.innerHTML += `
+        <div class="card-info">
+          <div class="card-title" title="${item.title}">${item.title}</div>
+          <div class="card-meta">
+            <span>${item.date || ''} ${formatSize(item.size) ? '· ' + formatSize(item.size) : ''}</span>
+            <a class="card-download" href="${url}" download onclick="event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              下载
+            </a>
+          </div>
+        </div>`;
+
+      grid.appendChild(card);
+      card.onclick = () => openLightbox(filtered, filtered.indexOf(item));
+    });
+  }
+
+  // Lightbox
+  const lb = document.getElementById('lightbox');
+  const lbContent = document.getElementById('lbContent');
+  const lbClose = document.getElementById('lbClose');
+  const lbPrev = document.getElementById('lbPrev');
+  const lbNext = document.getElementById('lbNext');
+  const lbCounter = document.getElementById('lbCounter');
+  const lbDownload = document.getElementById('lbDownload');
+
+  let lbItems = [];
+  let lbIndex = 0;
+
+  function openLightbox(items, index) {
+    lbItems = items;
+    lbIndex = index;
+    showItem();
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+  }
+
+  function closeLightbox() {
+    lb.classList.remove('open');
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', onKey);
+    lbContent.innerHTML = '';
+  }
+
+  function showItem() {
+    const item = lbItems[lbIndex];
+    if (!item) return;
+
+    const video = isVideo(item.file || '') || item.type === 'video';
+    const url = item.url;
+
+    lbContent.innerHTML = video
+      ? '<video src="' + url + '" controls autoplay playsinline preload="metadata"></video>'
+      : '<img src="' + url + '" alt="' + item.title + '">';
+
+    lbDownload.href = url;
+    lbDownload.download = item.file || item.title || '';
+    lbCounter.textContent = (lbIndex + 1) + ' / ' + lbItems.length;
+    lbPrev.style.visibility = lbIndex > 0 ? 'visible' : 'hidden';
+    lbNext.style.visibility = lbIndex < lbItems.length - 1 ? 'visible' : 'hidden';
+  }
+
+  lbClose.onclick = closeLightbox;
+  lbPrev.onclick = () => { if (lbIndex > 0) { lbIndex--; showItem(); } };
+  lbNext.onclick = () => { if (lbIndex < lbItems.length - 1) { lbIndex++; showItem(); } };
+  lb.onclick = (e) => { if (e.target === lb) closeLightbox(); };
+
+  function onKey(e) {
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft' && lbIndex > 0) { lbIndex--; showItem(); }
+    if (e.key === 'ArrowRight' && lbIndex < lbItems.length - 1) { lbIndex++; showItem(); }
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>
