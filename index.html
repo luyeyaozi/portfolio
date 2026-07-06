@@ -428,7 +428,7 @@
           <div class="card-title" title="${item.title}">${item.title}</div>
           <div class="card-meta">
             <span>${item.date || ''} ${formatSize(item.size) ? '· ' + formatSize(item.size) : ''}</span>
-            <a class="card-download" href="${url}" download onclick="event.stopPropagation()">
+            <a class="card-download" href="${item.originalUrl || url}" download onclick="event.stopPropagation()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               下载
             </a>
@@ -473,13 +473,13 @@
     if (!item) return;
 
     const video = isVideo(item.file || '') || item.type === 'video';
-    const url = item.url;
+    const displayUrl = item.originalUrl || item.url;
 
     lbContent.innerHTML = video
-      ? '<video src="' + url + '" controls autoplay playsinline preload="metadata"></video>'
-      : '<img src="' + url + '" alt="' + item.title + '">';
+      ? '<video src="' + displayUrl + '" controls autoplay playsinline preload="metadata"></video>'
+      : '<img src="' + displayUrl + '" alt="' + item.title + '">';
 
-    lbDownload.href = url;
+    lbDownload.href = displayUrl;
     lbDownload.download = item.file || item.title || '';
     lbCounter.textContent = (lbIndex + 1) + ' / ' + lbItems.length;
     lbPrev.style.visibility = lbIndex > 0 ? 'visible' : 'hidden';
