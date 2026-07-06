@@ -103,6 +103,11 @@
     background: #111;
   }
 
+  .card-thumb.lazy {
+    background: #1a1a1a;
+    transition: background 0.3s;
+  }
+
   .card-video-badge {
     position: absolute;
     top: 10px;
@@ -420,7 +425,7 @@
                onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 320 200%22><rect fill=%22%231a1a1a%22 width=%22320%22 height=%22200%22/><polygon fill=%22%23444%22 points=%22140,80 140,120 175,100%22/></svg>'">
           <div class="card-video-badge"></div>`;
       } else {
-        card.innerHTML = '<img class="card-thumb" src="' + url + '" alt="' + item.title + '" loading="lazy">';
+        card.innerHTML = '<img class="card-thumb lazy" data-src="' + url + '" alt="' + item.title + '">';
       }
 
       card.innerHTML += `
@@ -497,6 +502,32 @@
     if (e.key === 'ArrowRight' && lbIndex < lbItems.length - 1) { lbIndex++; showItem(); }
   }
 
+  // Lazy load: only load images when they're about to scroll into view
+  const lazyObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.classList.remove('lazy');
+        lazyObserver.unobserve(img);
+      }
+    });
+  }, { rootMargin: '200px' });
+
+  function attachLazy() {
+    document.querySelectorAll('.card-thumb[data-src]').forEach(img => {
+      lazyObserver.observe(img);
+    });
+  }
+
+  // Wrap render to attach lazy observers after each re-render
+  const _originalRender = render;
+  render = function() {
+    _originalRender();
+    attachLazy();
+  };
+
+  // Initial render
   render();
 })();
 </script>
